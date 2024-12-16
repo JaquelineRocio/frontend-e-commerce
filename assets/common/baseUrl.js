@@ -4,7 +4,7 @@ let baseURL = "";
 
 {
   Platform.OS == "android"
-    ? (baseURL = "http://192.168.1.44:3000/api/v1/")
+    ? (baseURL = "https://backend-e-commerce-h86m.onrender.com/api/v1/")
     : (baseURL = "");
 }
 

@@ -107,7 +107,9 @@ const Cart = (props) => {
               ) : (
                 <Button
                   colorScheme="gray"
-                  onPress={() => props.navigation.navigate("Login")}
+                  onPress={() =>
+                    props.navigation.navigate("User", { screen: "Login" })
+                  }
                 >
                   Login
                 </Button>
