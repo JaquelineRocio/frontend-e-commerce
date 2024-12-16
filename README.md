@@ -29,8 +29,7 @@ Esta aplicación de e-commerce está desarrollada en React Native y proporciona 
 ## Instalación y Configuración
 1. Clona el repositorio:
    ```bash
-   git clone [URL_DEL_REPOSITORIO]
-   cd [NOMBRE_DEL_PROYECTO]
+   git clone https://github.com/JaquelineRocio/frontend-e-commerce
    ```
 
 2. Instala las dependencias:
