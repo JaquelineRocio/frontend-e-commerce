@@ -24,13 +24,20 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
-      }
+      },
+      "package": "com.jaquelinerocio.easyshop"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "38a1ce3f-1f73-4de1-93a1-ceb309a0ec66"
+      }
+    },
+    "owner": "jaquelinerocio"
   }
 }

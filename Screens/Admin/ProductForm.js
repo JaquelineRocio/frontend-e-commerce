@@ -1,108 +1,66 @@
 import React, { useState, useEffect } from "react";
+import { Image, StyleSheet, Platform, ScrollView } from "react-native";
 import {
-  View,
+  Box,
+  VStack,
+  Input,
+  Select,
+  Button,
+  Icon,
+  WarningOutlineIcon,
   Text,
-  Image,
-  StyleSheet,
-  TouchableOpacity,
-  Platform,
-} from "react-native";
-import { Item, Picker } from "native-base";
-import FormContainer from "../../Shared/Form/FormContainer";
-import Input from "../../Shared/Form/Input";
-import EasyButton from "../../Shared/StyledComponents/EasyButton";
-import Error from "../../Shared/Error";
-import Icon from "react-native-vector-icons/FontAwesome";
+  Center,
+} from "native-base";
 import Toast from "react-native-toast-message";
-import baseURL from "../../assets/common/baseUrl";
-import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
 import * as SecureStore from "expo-secure-store";
 import mime from "mime";
+import axios from "axios";
+import baseURL from "../../assets/common/baseUrl";
 
 const ProductForm = (props) => {
-  const [pickerValue, setPickerValue] = useState();
-  const [brand, setBrand] = useState();
-  const [name, setName] = useState();
-  const [price, setPrice] = useState();
-  const [description, setDescription] = useState();
-  const [image, setImage] = useState();
-  const [mainImage, setMainImage] = useState();
-  const [category, setCategory] = useState();
+  const [brand, setBrand] = useState("");
+  const [name, setName] = useState("");
+  const [price, setPrice] = useState("");
+  const [description, setDescription] = useState("");
+  const [image, setImage] = useState("");
+  const [mainImage, setMainImage] = useState("");
+  const [category, setCategory] = useState("");
   const [categories, setCategories] = useState([]);
-  const [token, setToken] = useState();
-  const [err, setError] = useState();
-  const [countInStock, setCountInStock] = useState();
-  const [rating, setRating] = useState(0);
-  const [isFeatured, setIsFeature] = useState(false);
-  const [richDescription, setRichDescription] = useState();
-  const [numReviews, setNumReviews] = useState(0);
-  const [item, setItem] = useState(null);
+  const [token, setToken] = useState("");
+  const [countInStock, setCountInStock] = useState("");
+  const [err, setError] = useState("");
 
   useEffect(() => {
-    if (!props.route.params) {
-      setItem(null);
-    } else {
-      const { item } = props.route.params;
-      setItem(item);
-      setBrand(item.brand);
-      setName(item.name);
-      setPrice(item.price.toString());
-      setDescription(item.description);
-      setMainImage(item.image);
-      setImage(item.image);
-      setCategory(item.category._id);
-      setCountInStock(item.countInStock.toString());
-    }
-
-    // Obtener el token de SecureStore
-    const getToken = async () => {
+    const fetchInitialData = async () => {
       try {
         const storedToken = await SecureStore.getItemAsync("jwt");
         setToken(storedToken || "");
+        const res = await axios.get(`${baseURL}categories`);
+        setCategories(res.data);
       } catch (error) {
-        console.error("Error fetching token:", error);
+        alert("Hubo un problema al cargar las categorías.");
       }
     };
 
-    getToken();
-
-    // Cargar categorías
-    axios
-      .get(`${baseURL}categories`)
-      .then((res) => setCategories(res.data))
-      .catch(() => alert("Error to load categories"));
-
-    // Pedir permisos para el uso de la cámara
-    (async () => {
-      if (Platform.OS !== "web") {
-        const { status } = await ImagePicker.requestCameraPermissionsAsync();
-        if (status !== "granted") {
-          alert("Sorry, we need camera roll permissions to make this work!");
-        }
-      }
-    })();
-
-    return () => {
-      setCategories([]);
-    };
+    fetchInitialData();
   }, []);
 
   const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
     });
 
-    if (!result.cancelled) {
-      setMainImage(result.uri);
-      setImage(result.uri);
+    if (!result.canceled && result.assets.length > 0) {
+      setMainImage(result.assets[0].uri);
+      setImage(result.assets[0].uri);
     }
   };
 
-  const addProduct = () => {
+  const addProduct = async () => {
     if (
       !name ||
       !brand ||
@@ -111,104 +69,140 @@ const ProductForm = (props) => {
       !category ||
       !countInStock
     ) {
-      setError("Please fill in the form correctly");
+      setError("Todos los campos son obligatorios.");
       return;
     }
 
-    let formData = new FormData();
-
-    const newImageUri = "file:///" + image.split("file:/").join("");
-
-    formData.append("image", {
-      uri: newImageUri,
-      type: mime.getType(newImageUri),
-      name: newImageUri.split("/").pop(),
-    });
-    formData.append("name", name);
-    formData.append("brand", brand);
-    formData.append("price", price);
-    formData.append("description", description);
-    formData.append("category", category);
-    formData.append("countInStock", countInStock);
-    formData.append("richDescription", richDescription);
-    formData.append("rating", rating);
-    formData.append("numReviews", numReviews);
-    formData.append("isFeatured", isFeatured);
-
-    const config = {
-      headers: {
-        "Content-Type": "multipart/form-data",
-        Authorization: `Bearer ${token}`,
-      },
+    const productData = {
+      name,
+      brand,
+      price,
+      description,
+      category,
+      countInStock,
+      image: mainImage,
     };
 
-    const endpoint = item
-      ? `${baseURL}products/${item.id}`
-      : `${baseURL}products`;
+    try {
+      const config = {
+        headers: { Authorization: `Bearer ${token}` },
+      };
 
-    const method = item ? axios.put : axios.post;
+      const endpoint = `${baseURL}products`;
+      const res = await axios.post(endpoint, productData, config);
 
-    method(endpoint, formData, config)
-      .then((res) => {
-        if (res.status === 200 || res.status === 201) {
-          Toast.show({
-            topOffset: 60,
-            type: "success",
-            text1: item ? "Product successfully updated" : "New Product added",
-            text2: "",
-          });
-          setTimeout(() => {
-            props.navigation.navigate("Products");
-          }, 500);
-        }
-      })
-      .catch(() => {
-        Toast.show({
-          topOffset: 60,
-          type: "error",
-          text1: "Something went wrong",
-          text2: "Please try again",
-        });
+      Toast.show({
+        topOffset: 60,
+        type: "success",
+        text1: "Producto añadido con éxito",
       });
+
+      props.navigation.goBack();
+    } catch (error) {
+      console.error("Error al agregar el producto:", error);
+    }
   };
 
   return (
-    <FormContainer title="Add Product">
-      {/* Image Picker */}
-      <View style={styles.imageContainer}>
-        <Image style={styles.image} source={{ uri: mainImage }} />
-        <TouchableOpacity onPress={pickImage} style={styles.imagePicker}>
-          <Icon style={{ color: "white" }} name="camera" />
-        </TouchableOpacity>
-      </View>
+    <ScrollView style={styles.container}>
+      {/* Imagen */}
+      <Box mt={5} alignItems="center">
+        <Image
+          style={styles.image}
+          source={{ uri: mainImage || "https://via.placeholder.com/200" }}
+        />
+        <Button mt={3} colorScheme="primary" onPress={pickImage}>
+          Seleccionar Imagen
+        </Button>
+      </Box>
 
-      {/* Brand Input */}
-      <View style={styles.label}>
-        <Text style={{ textDecorationLine: "underline" }}>Brand</Text>
-      </View>
-      <Input
-        placeholder="Brand"
-        name="brand"
-        id="brand"
-        value={brand}
-        onChangeText={(text) => setBrand(text)}
-      />
+      {/* Formulario */}
+      <VStack space={4} px={4} mt={4}>
+        <Input
+          placeholder="Marca"
+          value={brand}
+          onChangeText={setBrand}
+          style={styles.input}
+        />
+        <Input
+          placeholder="Nombre del Producto"
+          value={name}
+          onChangeText={setName}
+          style={styles.input}
+        />
+        <Input
+          placeholder="Precio"
+          keyboardType="numeric"
+          value={price}
+          onChangeText={setPrice}
+          style={styles.input}
+        />
+        <Input
+          placeholder="Descripción"
+          value={description}
+          onChangeText={setDescription}
+          multiline
+          numberOfLines={3}
+          style={styles.input}
+        />
+        <Input
+          placeholder="Cantidad en Stock"
+          keyboardType="numeric"
+          value={countInStock}
+          onChangeText={setCountInStock}
+          style={styles.input}
+        />
 
-      {/* ... (resto de inputs y el picker se mantienen igual) ... */}
+        <Select
+          selectedValue={category}
+          placeholder="Seleccionar Categoría"
+          onValueChange={(value) => setCategory(value)}
+          style={styles.select}
+          _selectedItem={{
+            bg: "teal.600",
+            endIcon: <WarningOutlineIcon size="5" />,
+          }}
+        >
+          {categories.map((c) => (
+            <Select.Item key={c._id} label={c.name} value={c._id} />
+          ))}
+        </Select>
 
-      {err ? <Error message={err} /> : null}
+        {err ? <Text color="danger.500">{err}</Text> : null}
 
-      <View style={styles.buttonContainer}>
-        <EasyButton large primary onPress={addProduct}>
-          <Text style={styles.buttonText}>Confirm</Text>
-        </EasyButton>
-      </View>
-    </FormContainer>
+        {/* Botón de Confirmar */}
+        <Button colorScheme="teal" mt={4} onPress={addProduct}>
+          Confirmar
+        </Button>
+      </VStack>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  /* Mantén los estilos existentes */
+  container: {
+    backgroundColor: "#f9f9f9",
+    flex: 1,
+    width: "100%",
+  },
+  image: {
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    borderWidth: 2,
+    borderColor: "#ccc",
+  },
+  input: {
+    alignSelf: "center",
+    height: 50, // Ajusta la altura de los inputs
+    fontSize: 16,
+  },
+  select: {
+    alignSelf: "center",
+    height: 40, // Reduce la altura del Select
+    paddingVertical: 0,
+    fontSize: 16,
+  },
 });
 
 export default ProductForm;

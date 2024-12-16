@@ -45,7 +45,11 @@ const Categories = (props) => {
     getToken();
 
     axios
-      .get(`${baseURL}categories`)
+      .get(`${baseURL}categories`, {
+        headers: {
+          "Cache-Control": "no-cache",
+        },
+      })
       .then((res) => setCategories(res.data))
       .catch((error) => alert("Error to load categories"));
 

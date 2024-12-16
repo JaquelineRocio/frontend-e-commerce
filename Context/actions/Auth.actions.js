@@ -1,6 +1,6 @@
-import jwt_decode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import Toast from "react-native-toast-message";
-import * as SecureStore from "expo-secure-store"; // Importa SecureStore para reemplazar AsyncStorage
+import * as SecureStore from "expo-secure-store";
 import baseURL from "../../assets/common/baseUrl";
 
 export const SET_CURRENT_USER = "SET_CURRENT_USER";
@@ -41,24 +41,43 @@ export const loginUser = (user, dispatch) => {
       "Content-Type": "application/json",
     },
   })
-    .then((res) => res.json())
-    .then((data) => {
-      if (data) {
-        const token = data.token;
-        // Guardamos el token de forma segura
-        saveTokenToSecureStore("jwt", token);
-        const decoded = jwt_decode(token);
-        dispatch(setCurrentUser(decoded, user));
-      } else {
-        logoutUser(dispatch);
+    .then((res) => {
+      if (res.status !== 200) {
+        throw new Error("Authentication failed");
       }
+      return res.json();
+    })
+    .then((data) => {
+      if (!data.token) {
+        throw new Error("Token missing in response");
+      }
+
+      const token = data.token;
+      const userEmail = data.user;
+
+      // Guarda el token de manera segura
+      saveTokenToSecureStore("jwt", token);
+      console.log("Token saved to SecureStore:", token);
+
+      let decoded;
+      try {
+        decoded = jwtDecode(token);
+        console.log("Decoded token:", decoded);
+      } catch (err) {
+        console.error("Error decoding token:", err);
+        throw new Error("Invalid token format");
+      }
+
+      // Despacha la acción para actualizar el estado global
+      dispatch(setCurrentUser(decoded, { email: userEmail }));
     })
     .catch((err) => {
+      console.error("Error during login:", err);
       Toast.show({
         topOffset: 60,
         type: "error",
-        text1: "Please provide correct credentials",
-        text2: "",
+        text1: "Authentication failed",
+        text2: err.message,
       });
       logoutUser(dispatch);
     });

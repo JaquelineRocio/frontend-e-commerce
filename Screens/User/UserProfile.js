@@ -1,6 +1,16 @@
 import React, { useContext, useState, useCallback } from "react";
-import { View, Text, ScrollView, Button, StyleSheet } from "react-native";
-import { Container } from "native-base";
+import { ScrollView, StyleSheet } from "react-native";
+import {
+  Box,
+  Text,
+  VStack,
+  Button,
+  Heading,
+  Divider,
+  HStack,
+  Icon,
+} from "native-base";
+import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import * as SecureStore from "expo-secure-store";
 import OrderCard from "../../Shared/OrderCard";
@@ -18,29 +28,21 @@ const UserProfile = (props) => {
 
   useFocusEffect(
     useCallback(() => {
-      if (
-        context.stateUser.isAuthenticated === false ||
-        context.stateUser.isAuthenticated === null
-      ) {
+      if (!context.stateUser.isAuthenticated) {
         props.navigation.navigate("Login");
         return;
       }
 
-      // Obtén el token del usuario
       const fetchUserData = async () => {
         try {
           const token = await SecureStore.getItemAsync("jwt");
-
-          // Obtén el perfil del usuario
           const userResponse = await axios.get(
-            `${baseURL}users/${context.stateUser.user.sub}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
+            `${baseURL}users/${context.stateUser.user.userId}`,
+            { headers: { Authorization: `Bearer ${token}` } }
           );
+
           setUserProfile(userResponse.data);
 
-          // Obtén las órdenes del usuario
           const ordersResponse = await axios.get(`${baseURL}orders`);
           const userOrders = ordersResponse.data.filter(
             (order) => order.user._id === context.stateUser.user.sub
@@ -71,52 +73,79 @@ const UserProfile = (props) => {
   };
 
   return (
-    <Container style={styles.container}>
-      <ScrollView contentContainerStyle={styles.subContainer}>
-        <Text style={{ fontSize: 30 }}>
-          {userProfile ? userProfile.name : ""}
-        </Text>
-        <View style={{ marginTop: 20 }}>
-          <Text style={{ margin: 10 }}>
-            Email: {userProfile ? userProfile.email : ""}
-          </Text>
-          <Text style={{ margin: 10 }}>
-            Phone: {userProfile ? userProfile.phone : ""}
-          </Text>
-        </View>
-        <View style={{ marginTop: 80 }}>
-          <Button title={"Sign Out"} onPress={handleLogout} />
-        </View>
-        <View style={styles.order}>
-          <Text style={{ fontSize: 20 }}>My Orders</Text>
-          <View>
-            {orders.length ? (
-              orders.map((order) => <OrderCard key={order.id} {...order} />)
-            ) : (
-              <View style={styles.order}>
-                <Text>You have no orders</Text>
-              </View>
-            )}
-          </View>
-        </View>
+    <Box flex={1} bg="gray.100">
+      <ScrollView contentContainerStyle={styles.container}>
+        {/* Información del Usuario */}
+        <Box bg="white" rounded="lg" p={5} shadow={2} width="90%" mb={6}>
+          <VStack space={3} alignItems="center">
+            <Heading size="lg" color="primary.500">
+              {userProfile ? userProfile.name : "User"}
+            </Heading>
+            <Divider />
+            <HStack space={2} alignItems="center">
+              <Icon as={Ionicons} name="mail" color="gray.500" size="5" />
+              <Text fontSize="md" color="gray.700">
+                {userProfile ? userProfile.email : "No Email"}
+              </Text>
+            </HStack>
+            <HStack space={2} alignItems="center">
+              <Icon as={Ionicons} name="call" color="gray.500" size="5" />
+              <Text fontSize="md" color="gray.700">
+                {userProfile ? userProfile.phone : "No Phone"}
+              </Text>
+            </HStack>
+          </VStack>
+        </Box>
+
+        {/* Botón de Cerrar Sesión */}
+        <Button
+          colorScheme="danger"
+          width="90%"
+          onPress={handleLogout}
+          leftIcon={
+            <Icon as={Ionicons} name="log-out" size="5" color="white" />
+          }
+        >
+          Sign Out
+        </Button>
+
+        {/* Sección de Órdenes */}
+        <Box width="90%" mt={6}>
+          <Heading size="md" color="primary.500" mb={4} textAlign="center">
+            My Orders
+          </Heading>
+          {orders.length > 0 ? (
+            orders.map((order) => (
+              <OrderCard key={order.id} {...order} style={styles.orderCard} />
+            ))
+          ) : (
+            <Box
+              bg="white"
+              rounded="lg"
+              p={4}
+              shadow={2}
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Text fontSize="md" color="gray.600">
+                You have no orders.
+              </Text>
+            </Box>
+          )}
+        </Box>
       </ScrollView>
-    </Container>
+    </Box>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     alignItems: "center",
+    paddingVertical: 16,
   },
-  subContainer: {
-    alignItems: "center",
-    marginTop: 60,
-  },
-  order: {
-    marginTop: 20,
-    alignItems: "center",
-    marginBottom: 60,
+  orderCard: {
+    marginBottom: 12,
+    width: "100%",
   },
 });
 

@@ -1,12 +1,10 @@
 import React, { useContext, useEffect, useState } from "react";
 import { View, Dimensions, StyleSheet, TouchableOpacity } from "react-native";
-import { Container, Text, Left, Right, H1 } from "native-base";
+import { Box, VStack, HStack, Text, Heading, Button } from "native-base";
 import { SwipeListView } from "react-native-swipe-list-view";
-import CartItem from "./CartItem";
-
 import Icon from "react-native-vector-icons/FontAwesome";
-import EasyButton from "../../Shared/StyledComponents/EasyButton";
 
+import CartItem from "./CartItem";
 import { connect } from "react-redux";
 import * as actions from "../../Redux/Actions/cartActions";
 import AuthGlobal from "../../Context/store/AuthGlobal";
@@ -48,10 +46,15 @@ const Cart = (props) => {
   };
 
   return (
-    <>
+    <Box flex={1} bg="white">
       {productUpdate.length ? (
-        <Container>
-          <H1 style={{ alignSelf: "center" }}>Cart</H1>
+        <VStack space={4}>
+          {/* Header */}
+          <Heading alignSelf="center" mt={4}>
+            Cart
+          </Heading>
+
+          {/* SwipeListView */}
           <SwipeListView
             data={productUpdate}
             renderItem={(data) => <CartItem item={data} />}
@@ -65,7 +68,7 @@ const Cart = (props) => {
                 </TouchableOpacity>
               </View>
             )}
-            disableRightSwipe={true}
+            disableRightSwipe
             previewOpenDelay={3000}
             friction={1000}
             tension={40}
@@ -73,43 +76,58 @@ const Cart = (props) => {
             stopLeftSwipe={75}
             rightOpenValue={-75}
           />
-          <View style={styles.bottomContainer}>
-            <Left>
-              <Text style={styles.price}>$ {totalPrice.toFixed(2)}</Text>
-            </Left>
-            <Right>
-              <EasyButton danger medium onPress={() => props.clearCart()}>
-                <Text style={{ color: "white" }}>Clear</Text>
-              </EasyButton>
-            </Right>
-            <Right>
+
+          {/* Bottom Container */}
+          <HStack
+            justifyContent="space-between"
+            alignItems="center"
+            px={4}
+            py={2}
+            bg="gray.100"
+            position="absolute"
+            bottom={0}
+            left={0}
+            right={0}
+            shadow={2}
+          >
+            <Text fontSize="lg" color="red">
+              $ {totalPrice.toFixed(2)}
+            </Text>
+            <HStack space={2}>
+              <Button colorScheme="red" onPress={() => props.clearCart()}>
+                Clear
+              </Button>
               {context.stateUser.isAuthenticated ? (
-                <EasyButton
-                  primary
-                  medium
+                <Button
+                  colorScheme="blue"
                   onPress={() => props.navigation.navigate("Checkout")}
                 >
-                  <Text style={{ color: "white" }}>Checkout</Text>
-                </EasyButton>
+                  Checkout
+                </Button>
               ) : (
-                <EasyButton
-                  secondary
-                  medium
+                <Button
+                  colorScheme="gray"
                   onPress={() => props.navigation.navigate("Login")}
                 >
-                  <Text style={{ color: "white" }}>Login</Text>
-                </EasyButton>
+                  Login
+                </Button>
               )}
-            </Right>
-          </View>
-        </Container>
+            </HStack>
+          </HStack>
+        </VStack>
       ) : (
-        <Container style={styles.emptyContainer}>
-          <Text>Looks like your cart is empty</Text>
-          <Text>Add products to your cart to get started</Text>
-        </Container>
+        <VStack
+          flex={1}
+          justifyContent="center"
+          alignItems="center"
+          space={2}
+          bg="gray.100"
+        >
+          <Text fontSize="lg">Looks like your cart is empty</Text>
+          <Text fontSize="md">Add products to your cart to get started</Text>
+        </VStack>
       )}
-    </>
+    </Box>
   );
 };
 
@@ -128,24 +146,6 @@ const mapDispatchToProps = (dispatch) => {
 };
 
 const styles = StyleSheet.create({
-  emptyContainer: {
-    height: height,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  bottomContainer: {
-    flexDirection: "row",
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    backgroundColor: "white",
-    elevation: 20,
-  },
-  price: {
-    fontSize: 18,
-    margin: 20,
-    color: "red",
-  },
   hiddenContainer: {
     flex: 1,
     justifyContent: "flex-end",

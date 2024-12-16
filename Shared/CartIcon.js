@@ -1,43 +1,50 @@
 import React from "react";
 import { StyleSheet } from "react-native";
-import { Badge, Text } from "native-base";
-
+import { Badge, Text, Box } from "native-base";
 import { connect } from "react-redux";
 
 const CartIcon = (props) => {
   return (
-    <>
-      {props.cartItems.length ? (
-        <Badge style={styles.badge}>
-          <Text style={styles.text}>{props.cartItems.length}</Text>
+    <Box style={styles.container}>
+      {props.cartItems.length > 0 && (
+        <Badge
+          colorScheme="danger"
+          rounded="full"
+          style={styles.badge}
+          _text={{
+            fontSize: 12,
+            fontWeight: "bold",
+            color: "white",
+          }}
+        >
+          {props.cartItems.length}
         </Badge>
-      ) : null}
-    </>
+      )}
+    </Box>
   );
 };
 
 const mapStateToProps = (state) => {
   const { cartItems } = state;
   return {
-    cartItems: cartItems,
+    cartItems,
   };
 };
 
 const styles = StyleSheet.create({
-  badge: {
-    width: 25,
-    position: "absolute",
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    alignContent: "center",
-    top: -4,
-    right: -15,
+  container: {
+    position: "absolute", // Posiciona el badge sobre el ícono
+    top: -10, // Ajusta el badge ligeramente hacia arriba
+    right: -10, // Ajusta el badge a la derecha
+    zIndex: 10, // Se asegura de que el badge esté sobre cualquier otro elemento
   },
-  text: {
-    fontSize: 12,
-    width: 100,
-    fontWeight: "bold",
+  badge: {
+    minWidth: 20, // Tamaño mínimo para que sea redondo
+    height: 20, // Altura fija
+    justifyContent: "center", // Centra el texto verticalmente
+    alignItems: "center", // Centra el texto horizontalmente
+    paddingHorizontal: 4, // Espaciado horizontal del texto
+    backgroundColor: "red", // Color rojo para el fondo
   },
 });
 

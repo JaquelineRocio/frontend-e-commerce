@@ -15,8 +15,7 @@ import AuthGlobal from "../Context/store/AuthGlobal";
 const Tab = createBottomTabNavigator();
 
 const Main = () => {
-
-  const context = useContext(AuthGlobal)
+  const context = useContext(AuthGlobal);
 
   return (
     <Tab.Navigator
@@ -48,19 +47,19 @@ const Main = () => {
           ),
         }}
       />
-      
+
       {context.stateUser.user.isAdmin == true ? (
         <Tab.Screen
-        name="Admin"
-        component={AdminNavigator}
-        options={{
-          tabBarIcon: ({ color }) => (
-            <Icon name="cog" color={color} size={30} />
-          ),
-        }}
-      />
-      ): null }
-      
+          name="Admin"
+          component={AdminNavigator}
+          options={{
+            tabBarIcon: ({ color }) => (
+              <Icon name="cog" color={color} size={30} />
+            ),
+          }}
+        />
+      ) : null}
+
       <Tab.Screen
         name="User"
         component={UserNavigator}

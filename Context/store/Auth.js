@@ -1,5 +1,5 @@
 import React, { useEffect, useReducer, useState } from "react";
-import jwt_decode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import * as SecureStore from "expo-secure-store";
 
 import authReducer from "../reducers/Auth.reducer";
@@ -31,7 +31,7 @@ const Auth = (props) => {
     const checkToken = async () => {
       const jwt = await getToken(); // Obtiene el token almacenado
       if (jwt && isMounted) {
-        const decoded = jwt_decode(jwt); // Decodifica el token
+        const decoded = jwtDecode(jwt); // Decodifica el token
         dispatch(setCurrentUser(decoded)); // Establece el usuario actual
       }
     };

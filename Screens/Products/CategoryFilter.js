@@ -1,64 +1,61 @@
-import React from 'react';
-import { StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { ListItem, Badge, Text } from 'native-base';
+import React from "react";
+import { ScrollView, TouchableOpacity } from "react-native";
+import { Badge, Text, HStack } from "native-base";
 
 const CategoryFilter = (props) => {
+  console.log("CategoryFilter props:", props);
 
-    return(
-        <ScrollView
-            bounces={true}
-            horizontal={true}
-            style={{ backgroundColor: "#f2f2f2" }}
+  return (
+    <ScrollView
+      bounces={true}
+      horizontal={true}
+      showsHorizontalScrollIndicator={false}
+      style={{ backgroundColor: "#f2f2f2" }}
+    >
+      <HStack space={2} px={4} py={2}>
+        {/* Opción ALL */}
+        <TouchableOpacity
+          onPress={() => {
+            console.log("All pressed");
+            props.categoryFilter("all");
+            props.setActive(-1);
+          }}
         >
-            <ListItem style={{ margin: 0, padding: 0, borderRadius: 0 }}>
-                <TouchableOpacity
-                    key={1}
-                    onPress={() => {
-                        props.categoryFilter('all'), props.setActive(-1)
-                    }}
-                >
-                    <Badge
-                        style={[styles.center, {margin: 5},
-                            props.active == -1 ? styles.active : styles.inactive
-                        ]}
-                    >
-                        <Text style={{ color: 'white' }}>All</Text>
-                    </Badge>
-                </TouchableOpacity>
-                {props.categories.map((item) => (
-                      <TouchableOpacity
-                      key={item._id}
-                      onPress={() => {
-                          props.categoryFilter(item._id), 
-                          props.setActive(props.categories.indexOf(item))
-                      }}
-                  >
-                      <Badge
-                          style={[styles.center, 
-                            {margin: 5},
-                            props.active == props.categories.indexOf(item) ? styles.active : styles.inactive
-                          ]}
-                      >
-                          <Text style={{ color: 'white' }}>{item.name}</Text>
-                      </Badge>
-                  </TouchableOpacity>
-                ))}
-            </ListItem>
-        </ScrollView>
-    )
-}
+          <Badge
+            variant={props.active === -1 ? "solid" : "subtle"}
+            colorScheme={props.active === -1 ? "blue" : "coolGray"}
+          >
+            <Text style={{ color: props.active === -1 ? "white" : "black" }}>
+              All
+            </Text>
+          </Badge>
+        </TouchableOpacity>
 
-const styles = StyleSheet.create({
-    center: {
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
-    active: {
-        backgroundColor: '#03bafc'
-    },
-    inactive: {
-        backgroundColor: '#a0e1eb'
-    }
-})
+        {/* Opciones de Categoría */}
+        {props.categories.map((item, index) => (
+          <TouchableOpacity
+            key={item._id}
+            onPress={() => {
+              console.log("Category pressed:", item.name);
+              props.categoryFilter(item._id);
+              props.setActive(index);
+            }}
+          >
+            <Badge
+              variant={props.active === index ? "solid" : "subtle"}
+              colorScheme={props.active === index ? "blue" : "coolGray"}
+            >
+              <Text
+                style={{ color: props.active === index ? "white" : "black" }}
+              >
+                {item.name}
+              </Text>
+            </Badge>
+          </TouchableOpacity>
+        ))}
+      </HStack>
+    </ScrollView>
+  );
+};
 
 export default CategoryFilter;
